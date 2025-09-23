@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Исходные файлы">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Файлы заголовков">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Исходные файлы\GameModule">
+      <UniqueIdentifier>{806c0f05-9a57-457f-9131-84b690ef36b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\Library">
+      <UniqueIdentifier>{51410aa6-eeb9-4c1f-9e7d-6b1f67d386f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\GameModule\Source">
+      <UniqueIdentifier>{aebb18fb-f093-4694-836a-b1c9f287d877}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\GameModule\Source\Public">
+      <UniqueIdentifier>{430a53b6-bc13-42a0-9e89-bf5e52670fde}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\GameModule\Source\Private">
+      <UniqueIdentifier>{050484b3-b281-47de-a180-f6f57238d578}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\GameModule\Saves">
+      <UniqueIdentifier>{3b615776-914c-45b7-adfa-9c256e90f917}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\GameModule\Config">
+      <UniqueIdentifier>{8eff6b8d-1cfc-440e-8122-0e4faf887686}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Lab_Game.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Source.cpp">
+      <Filter>Исходные файлы\GameModule\Source\Public</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
