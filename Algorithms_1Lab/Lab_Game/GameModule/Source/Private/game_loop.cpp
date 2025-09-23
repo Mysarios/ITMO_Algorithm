@@ -78,11 +78,17 @@ randomize_round_params game_loop::get_random_params()
 
 void game_loop::after_round_event()
 {
+    // Disasters
+    // Add humans
     ++rounds_;
 }
 
 
 void game_loop::loop()
 {
+    // while(game)
+    // init_rand params
+    // User unput
+    // Events
     after_round_event();
 }

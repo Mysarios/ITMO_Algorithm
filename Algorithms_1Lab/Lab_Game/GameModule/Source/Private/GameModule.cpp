@@ -41,6 +41,17 @@ game_message game_module::initialize()
 
 game_message game_module::start_game()
 {
+    initialize();
     const auto create_message = start_dialogue();
+    //ToDo - init game
+    /*switch(){
+    case 1 - try_load_game
+    case 2 - create_new_game
+    }
+
+    game_loop create and init.
+    game_loop - start game loop()
+    */
+
     return create_message;
 }
