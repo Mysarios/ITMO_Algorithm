@@ -7,7 +7,9 @@ enum resource_name
     food,
     humans,
     warriors,
-    fields
+    fields,
+    happines,
+    taller
 };
 
 struct resource
@@ -18,17 +20,18 @@ struct resource
     {
         return type == B.type;
     }
+    resource(std::string getted_str_name) : name(getted_str_name)
+    {
+       if(getted_str_name == "gold") type = gold;
+       else if(getted_str_name == "food") type = food;
+       else if(getted_str_name == "humans") type = humans;
+       else if(getted_str_name == "warriors") type = warriors;
+       else if(getted_str_name == "fields") type = fields;
+       else if(getted_str_name == "happines") type = happines;
+       else if(getted_str_name == "taller") type = taller;
+    }
 };
 
-class game_resources
-{
-public:
-    bool try_to_by_resources(const resource& want_by, const resource& want_sell, unsigned int count);
-
-    float get_cost_multiplier(resource resource);
-    bool can_buy_resource(const resource& getted_by, const resource& lost_resource,unsigned int count);
-    unsigned int get_count_resource(resource resource);
-};
 
 //hash func for unordered_map
 namespace std

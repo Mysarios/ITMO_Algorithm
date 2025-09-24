@@ -12,7 +12,7 @@ void game_loop::after_round_event()
 {
     // Disasters
     // Add humans
-    ++rounds_;
+    ++round_;
 }
 
 //ToDo
@@ -43,6 +43,7 @@ bool buy_dialogue(game_info* info)
 //ToDo
 bool info_dialogue()
 {
+    return true;
 }
 
 bool input_dialogue(game_info* info, const int input_key)
@@ -68,7 +69,7 @@ bool input_dialogue(game_info* info, const int input_key)
 
 void game_loop::loop()
 {
-    while (rounds_ <= config_->get_max_rounds())
+    while (round_ <= info_->get_max_rounds_count())
     {
         get_random_params();
 

@@ -1,18 +1,16 @@
 #pragma once
 
+#include <map>
+
 #include "game_message.h"
 #include <string>
 
 namespace config
 {
-    static std::string config_part{ "Hi"};
+    static std::string base_config_part{ "GameModule/Config/BaseParametersConfig.txt"};
 }
 class game_config
 {
-private:
-    size_t max_rounds_ = 0;
 public:
-    [[nodiscard]] size_t get_max_rounds() const {return max_rounds_;}
-    
-    game_message load_data_from_config();
+    static game_message load_data_from_config(std::map<std::string, std::map<std::string, int>>& config, std::string config_part = {});
 };

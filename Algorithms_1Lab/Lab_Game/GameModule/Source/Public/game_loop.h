@@ -28,9 +28,9 @@ struct randomize_round_params
 class game_loop
 {
 private:
-    size_t rounds_;
+    size_t round_;
 
-    game_config* config_;
+    //game_config* config_;
     game_info* info_;
     randomize_round_params after_round_random_params_;
 private:
@@ -38,7 +38,9 @@ private:
     randomize_round_params get_random_params();
     
 public:
-    explicit game_loop(game_info* info_initialize) : info_(info_initialize), rounds_(0){}
-    
+    explicit game_loop(game_info* info_initialize) : round_(0), info_(info_initialize), after_round_random_params_()
+    {
+    }
+
     void loop();
 };

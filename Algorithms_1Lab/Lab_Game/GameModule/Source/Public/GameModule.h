@@ -10,7 +10,7 @@ private:
     /**
     * Main config with init data
     */
-    game_config game_config_;
+    //game_config* game_config_;
 
     /**
      * Main loop in this game
@@ -24,7 +24,6 @@ private:
 
 public:
     game_module();
-    game_message initialize();
     game_message start_game();
 protected:
 

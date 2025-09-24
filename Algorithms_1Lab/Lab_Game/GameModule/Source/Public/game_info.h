@@ -15,6 +15,9 @@ private:
     std::unordered_map<resource, std::unordered_map<resource, float>> cost_map_;
 
 public:
+    explicit civilization_info(const std::map<std::string, int>& config);
+    civilization_info() = default;
+    
     void buy_resource(const resource& buy,const resource& sell,unsigned int count);
     void print_all_info();
     void print_cost_information(const resource& resource);
@@ -27,9 +30,15 @@ public:
 
 class game_info
 {
+private:
+    size_t max_rounds_ = 0;
 public:
     civilization_info main_information;
-
-    static game_message try_load_game(game_info* loaded_game) { return SUCCESS_MESSAGE; }
-    static game_message create_new_game(game_info* created_game) { return SUCCESS_MESSAGE; }
+    
+public:
+    game_info() = default;
+    [[nodiscard]] size_t get_max_rounds_count() const {return max_rounds_;}
+    
+    game_message try_load_game_or_create(const std::string& config_part = {});
+    //game_message create_new_game();
 };

@@ -1,22 +1,39 @@
 #include "../Public/game_info.h"
 
+#include <iomanip>
 #include <iostream>
 #include <ranges>
 
-float get_value(std::variant<unsigned int, float> v)
+#include "../Public/game_config.h"
+
+namespace
 {
-    return std::visit([]<typename T0>(T0&& arg) -> float
+    float get_value(std::variant<unsigned int, float> v)
     {
-        using t = std::decay_t<T0>;
-        if constexpr (std::is_same_v<t, unsigned int>)
+        return std::visit([]<typename T0>(T0&& arg) -> float
         {
-            return static_cast<float>(arg);
-        }
-        else
-        {
-            return arg;
-        }
-    }, v);
+            using t = std::decay_t<T0>;
+            if constexpr (std::is_same_v<t, unsigned int>)
+            {
+                return static_cast<float>(arg);
+            }
+            else
+            {
+                return arg;
+            }
+        }, v);
+    }
+}
+
+
+civilization_info::civilization_info(const std::map<std::string, int>& config)
+{
+    for (auto& [name, value] : config)
+    {
+        std::variant<unsigned int, float> new_val;
+        new_val.emplace<unsigned int>(value);
+        resource_map_.emplace(resource(name), new_val);
+    }
 }
 
 void civilization_info::buy_resource(const resource& buy, const resource& sell, unsigned int count)
@@ -27,10 +44,13 @@ void civilization_info::buy_resource(const resource& buy, const resource& sell, 
 
 void civilization_info::print_all_info()
 {
-    std::cout << "Resource name:   " << "Resource count:" << std::endl;
+    std::cout<<"\nAt the moment, you have:\n";
+    std::cout << "Resource name:   " << " Resource count:" << std::endl;
+    size_t line_index = 1;
     for (const auto& key : resource_map_ | std::views::keys)
     {
-        std::cout << key.name << "   " << get_resource_count(key) << std::endl;
+        std::cout << line_index++ << ") " << std::setw(14) << key.name << "   " << std::setw(13) <<
+            get_resource_count(key) << std::endl;
     }
 }
 
@@ -83,4 +103,36 @@ float civilization_info::get_resource_cost(const resource& want_buy, const resou
         }
     }
     return FLT_MAX;
+}
+
+game_message game_info::try_load_game_or_create(const std::string& config_part)
+{
+    std::map<std::string, std::map<std::string, int>> config;
+    if (const game_message load_message = game_config::load_data_from_config(config, config_part); !load_message.
+        success)
+    {
+        return load_message;
+    }
+    const auto game_info_config = config.find("GameInfo");
+    const auto civil_info_config = config.find("CivilInfo");
+    const auto random_info_config = config.find("RandomInfo");
+
+    std::cout<<std::endl<<std::endl;
+    switch (config_part.length())
+    {
+    case 0:
+        std::cout <<
+            "Hello!\nToday you will play as the ruler of Ancient Egypt!\nTry to lead your nation to greatness, and do not be discouraged by the difficulties along the way!\n\n";
+        std::cout <<
+            "Remember that the poorer and malnourished your population is, the less food you produce.\nIf famine has begun, it is almost impossible to stop.\nAlso remember that the more abundant your resources are, the more demanding your citizens are! \nAnd don't forget about your enemies. They are always nearby, eager to seize your wealth!\nYou have fields for food, food reserves, gold, wars, and tax levels to collect money from your subjects. Remember that the mood of your subjects reflects on the success of your country.\nTry to maintain a balance in your government, as well as protect your country.\nGood reign to you!\n\n";
+        break;
+    default:
+        break;
+    }
+    max_rounds_ = game_info_config->second.find("maxRounds")->second;
+    main_information = civilization_info(civil_info_config->second);
+
+    main_information.print_all_info();
+
+    return SUCCESS_MESSAGE;
 }
