@@ -26,14 +26,26 @@ namespace
 }
 
 
-civilization_info::civilization_info(const std::map<std::string, int>& config)
+civilization_info::civilization_info(const std::map<std::string, float>& resource_config,
+                                     const std::map<std::string, std::unordered_map<std::string, float>>&
+                                     base_cost_config)
 {
-    for (auto& [name, value] : config)
+    for (auto& [name, value] : resource_config)
     {
         std::variant<unsigned int, float> new_val;
-        new_val.emplace<unsigned int>(value);
+        new_val.emplace<float>(value);
         resource_map_.emplace(resource(name), new_val);
     }
+    for (auto& [name, value] : base_cost_config)
+    {
+        std::unordered_map<resource, float> cost_map;
+        for (auto& [name_value, value_cost] : value)
+        {
+            cost_map.emplace(resource(name_value), value_cost);
+        }
+        base_cost_map_.emplace(resource(name), cost_map);
+    }
+    cost_map_ = base_cost_map_;
 }
 
 void civilization_info::buy_resource(const resource& buy, const resource& sell, unsigned int count)
@@ -44,7 +56,7 @@ void civilization_info::buy_resource(const resource& buy, const resource& sell, 
 
 void civilization_info::print_all_info()
 {
-    std::cout<<"\nAt the moment, you have:\n";
+    std::cout << "\nAt the moment, you have:\n";
     std::cout << "Resource name:   " << " Resource count:" << std::endl;
     size_t line_index = 1;
     for (const auto& key : resource_map_ | std::views::keys)
@@ -62,10 +74,13 @@ void civilization_info::print_cost_information(const resource& resource)
         return;
     }
 
+    std::cout << std::endl << "U need spend: " << resource.name << "to buy next resources!\n";
     std::cout << "Resource name:   " << "Resource count to buy:" << std::endl;
+    int index_line = 1;
     for (const auto& pair : it->second)
     {
-        std::cout << pair.first.name << "   " << pair.second << std::endl;
+        std::cout << index_line++ << ")" << std::setw(13) << pair.first.name << "   " << std::setw(23) << pair.second <<
+            std::endl;
     }
 }
 
@@ -107,7 +122,7 @@ float civilization_info::get_resource_cost(const resource& want_buy, const resou
 
 game_message game_info::try_load_game_or_create(const std::string& config_part)
 {
-    std::map<std::string, std::map<std::string, int>> config;
+    std::map<std::string, std::map<std::string, float>> config;
     if (const game_message load_message = game_config::load_data_from_config(config, config_part); !load_message.
         success)
     {
@@ -116,8 +131,24 @@ game_message game_info::try_load_game_or_create(const std::string& config_part)
     const auto game_info_config = config.find("GameInfo");
     const auto civil_info_config = config.find("CivilInfo");
     const auto random_info_config = config.find("RandomInfo");
+    std::map<std::string, float> base_cost_info_config = config.find("BaseCostInfo")->second;
 
-    std::cout<<std::endl<<std::endl;
+    std::map<std::string, std::unordered_map<std::string, float>> cost_config;
+    for (const auto [name,cost] : base_cost_info_config)
+    {
+        std::vector<std::string> names = game_config::split_str(name, "To");
+        if (auto it = cost_config.find(names[0]); it != cost_config.end())
+        {
+            it->second.emplace(names[1], cost);
+        }
+        else
+        {
+            std::unordered_map<std::string, float> buf;
+            buf.emplace(names[1], cost);
+            cost_config.emplace(names[0], buf);
+        }
+    }
+    std::cout << std::endl << std::endl;
     switch (config_part.length())
     {
     case 0:
@@ -130,9 +161,13 @@ game_message game_info::try_load_game_or_create(const std::string& config_part)
         break;
     }
     max_rounds_ = game_info_config->second.find("maxRounds")->second;
-    main_information = civilization_info(civil_info_config->second);
+    main_information = civilization_info(civil_info_config->second, cost_config);
 
     main_information.print_all_info();
+    main_information.print_cost_information(resource("gold"));
+    main_information.print_cost_information(resource("food"));
+    main_information.print_cost_information(resource("humans"));
+    main_information.print_cost_information(resource("fields"));
 
     return SUCCESS_MESSAGE;
 }

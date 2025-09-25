@@ -1,3 +1,4 @@
-CivilInfo=gold:100,food:200,humans:50,warriors:0,fields:10,happines:100,taller:1
-RandomInfo=goldToFood:2
+CivilInfo=gold:100;food:200;humans:50;warriors:0;fields:10;happines:100;taller:1
+BaseCostInfo=goldTofood:0.5;goldTowarriors:50;goldTofields:5;foodTogold:5;foodTohumans:50;humansTogold:10;fieldsTogold:2
+RandomInfo=maxRounds:10
 GameInfo=maxRounds:10
