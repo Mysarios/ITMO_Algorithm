@@ -16,19 +16,20 @@ struct resource
 {
     resource_name type;
     std::string name;
+    bool IsInt = false;
     bool operator==(const resource& B) const
     {
         return type == B.type;
     }
     resource(std::string getted_str_name) : name(getted_str_name)
     {
-       if(getted_str_name == "gold") type = gold;
-       else if(getted_str_name == "food") type = food;
-       else if(getted_str_name == "humans") type = humans;
-       else if(getted_str_name == "warriors") type = warriors;
-       else if(getted_str_name == "fields") type = fields;
-       else if(getted_str_name == "happines") type = happines;
-       else if(getted_str_name == "taller") type = taller;
+       if(getted_str_name == "gold") {type = gold; }
+       else if(getted_str_name == "food") {type = food; }
+       else if(getted_str_name == "humans") { type = humans; IsInt = true; }
+       else if(getted_str_name == "warriors") {type = warriors; IsInt = true; }
+       else if(getted_str_name == "fields") {type = fields; }
+       else if(getted_str_name == "happines") { type = happines; }
+       else if(getted_str_name == "taller") {type = taller; }
     }
 };
 
