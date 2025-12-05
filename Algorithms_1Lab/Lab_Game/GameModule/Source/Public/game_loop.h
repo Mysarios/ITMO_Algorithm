@@ -28,24 +28,20 @@ struct randomize_round_params
 class game_loop
 {
 private:
-    size_t round_;
-
-    //game_config* config_;
-    game_info* info_;
-    randomize_round_params after_round_random_params_;
+    size_t round_ = 0;
+    game_info* info_ = nullptr;
+    randomize_round_params after_round_random_params_ = {};
 private:
-    void before_round_event();
-    bool round_event();
-    void after_round_event();
-    
     void first_message_after_game_start(bool new_game) const;
+    void before_round_event();
+    void after_round_event();
+
+    bool round_event() const;
     
     randomize_round_params get_random_params();
     
 public:
-    explicit game_loop(game_info* info_initialize) : round_(0), info_(info_initialize), after_round_random_params_()
-    {
-    }
-
+    game_loop() = default;
+    game_loop(game_info* info_);
     void loop();
 };

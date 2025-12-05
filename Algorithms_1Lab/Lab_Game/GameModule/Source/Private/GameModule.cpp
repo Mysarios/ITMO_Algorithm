@@ -23,13 +23,20 @@ game_message game_module::start_dialogue()
         std::cout << "\nEnter correct number!\n\n";
         return start_dialogue(); // try to start again
     }
+    game_loop_ = new game_loop(game_info_);
     return create_message;
 }
 
 game_module::game_module(): game_loop_(nullptr), game_info_(nullptr)
 {
     game_info_ = new game_info();
-    game_loop_ = new game_loop(game_info_);
+    //game_loop_ = new game_loop();
+}
+
+game_module::~game_module()
+{
+    delete game_info_;
+    delete game_loop_;
 }
 
 

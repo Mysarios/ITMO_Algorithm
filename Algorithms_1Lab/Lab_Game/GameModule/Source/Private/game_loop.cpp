@@ -19,7 +19,7 @@ namespace
             }
             if (input_key < 1 || input_key > buy_array.size())
             {
-                std::cout << "Incorrect index!" << std::endl;
+                std::cout << "Incorrect index!" << '\n';
                 continue;
             }
             const resource resource_to_buy = buy_array[input_key - 1].second;
@@ -35,25 +35,25 @@ namespace
             }
             if (input_key_to_sell < 1 || input_key_to_sell > sell_array.size())
             {
-                std::cout << "Incorrect index!" << std::endl;
+                std::cout << "Incorrect index!" << '\n';
                 continue;
             }
             const resource resource_to_sell = sell_array[input_key_to_sell - 1].second;
 
             int count_to_buy;
-            std::cout << "=U wanna buy: " << resource_to_buy.name << " by: " << resource_to_sell.name << std::endl;
-            std::cout << "Enter count resource u want buy" << std::endl;
+            std::cout << "=U wanna buy: " << resource_to_buy.name << " by: " << resource_to_sell.name << '\n';
+            std::cout << "Enter count resource u want buy" << '\n';
             std::cin >> count_to_buy;
 
             info->main_information.buy_resource(resource_to_buy, resource_to_sell, count_to_buy);
             break;
         }
+        return true;
     }
 
-    bool info_dialogue(game_info* info)
+    void info_dialogue(game_info* info)
     {
         info->main_information.print_all_info();
-        return true;
     }
 
     bool input_dialogue(game_info* info, const int input_key)
@@ -61,16 +61,16 @@ namespace
         switch (input_key)
         {
         case 1:
-            buy_dialogue(info);
+            buy_dialogue(info); //buy
             return true;
         case 2:
-            info_dialogue(info);
+            info_dialogue(info); // info about all
             return true;
         case 3:
-            std::cout << "=End round!\n" << std::endl;
+            std::cout << "=End round!\n" << '\n'; // end
             return false;
         default:
-            std::cout << "Enter correct input! ..." << std::endl;
+            std::cout << "Enter correct input! ..." << '\n'; //retry
             return true;
         }
     }
@@ -83,27 +83,27 @@ randomize_round_params game_loop::get_random_params()
 
 void game_loop::first_message_after_game_start(const bool new_game) const
 {
-    if (new_game)
+    if (!new_game)
     {
         std::cout << "=Game again started!\n U have " << info_->get_max_rounds_count() - round_ <<
-            " to continue create best civilization, or die unknown!\n Good luck!\n" << std::endl;
+            " to continue create best civilization, or die unknown!\n Good luck!\n" << '\n';
     }
     else
     {
         std::cout << "=Game Started!\nU have " << info_->get_max_rounds_count() <<
-            " rounds to create best civilization, or die unknown!\nGood luck!\n" << std::endl;
+            " rounds to create best civilization, or die unknown!\nGood luck!\n" << '\n';
     }
 }
 
 void game_loop::before_round_event()
 {
-    std::cout << "--------------------------------" << std::endl;
-    std::cout << "=Round: " << round_ << std::endl;
-    std::cout << "--------------------------------" << std::endl;
+    std::cout << "--------------------------------" << '\n';
+    std::cout << "=Round: " << round_ + 1 << '\n';
+    std::cout << "--------------------------------" << '\n';
     get_random_params();
 }
 
-bool game_loop::round_event()
+bool game_loop::round_event() const
 {
     std::cout <<
         "Enter: 1 to buy resource\nEnter: 2 to get info about all resources\nEnter: 3 to end round\nEnter: 4 to save game and exit\n\nPrint: ";
@@ -117,10 +117,10 @@ bool game_loop::round_event()
     if (info_->game_lose())
     {
         std::cout << "=U sell all humans, it's not bad, but, but... maybe U wanna play trading simulator...?" <<
-            std::endl;
+            '\n';
         return false;
     }
-    std::cout << "--------------------------------\n" << std::endl;
+    std::cout << "--------------------------------\n" << '\n';
     return true;
 }
 
@@ -131,6 +131,8 @@ void game_loop::after_round_event()
     ++round_;
 }
 
+
+game_loop::game_loop(game_info* new_game_info) : info_(new_game_info){};
 
 void game_loop::loop()
 {
@@ -151,10 +153,10 @@ void game_loop::loop()
 
         if (info_->game_lose())
         {
-            std::cout << "U lose =(" << std::endl;
+            std::cout << "U lose =(" << '\n';
             return;
         }
     }
     
-    std::cout << "U Win!!!! =)" << std::endl;
+    std::cout << "U Win!!!! =)" << '\n';
 }

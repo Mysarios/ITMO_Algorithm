@@ -28,7 +28,7 @@ namespace
 
 
 civilization_info::civilization_info(const std::map<std::string, float>& resource_config,
-                                     const std::map<std::string, std::unordered_map<std::string, float>>&
+                                     const resource_cost_map&
                                      base_cost_config)
 {
     for (auto& [name, value] : resource_config)
@@ -47,7 +47,8 @@ civilization_info::civilization_info(const std::map<std::string, float>& resourc
     cost_map_ = base_cost_map_;
 }
 
-void civilization_info::buy_resource(const resource& buy, const resource& sell, unsigned int count)
+
+void civilization_info::buy_resource(const resource& buy, const resource& sell, const unsigned int count)
 {
     std::cout << "\n=U wanna buy: " << count << " " << buy.name << " by: " << sell.name << "!    ";
     if (try_to_buy_resources(buy, sell, count))
@@ -64,45 +65,45 @@ void civilization_info::buy_resource(const resource& buy, const resource& sell, 
 void civilization_info::print_all_info()
 {
     std::cout << "\nAt the moment, you have:\n";
-    std::cout << "Resource name:   " << " Resource count:" << std::endl;
+    std::cout << "Resource name:   " << " Resource count:" << '\n';
     size_t line_index = 1;
     for (const auto& key : resource_map_ | std::views::keys)
     {
         std::cout << line_index++ << ") " << std::setw(14) << key.name << "   " << std::setw(13) <<
-            get_resource_count(key) << std::endl;
+            get_resource_count(key) << '\n';
     }
-    std::cout << std::endl;
+    std::cout << '\n';
 }
 
-std::vector<std::pair<size_t, resource>> civilization_info::print_cost_information_to_sell(
+resource_index_table civilization_info::print_cost_information(
     const resource& resource_to_sell)
 {
-    std::vector<std::pair<size_t, resource>> result;
+    resource_index_table result;
     const auto it = cost_map_.find(resource_to_sell);
     if (it == cost_map_.end())
     {
         return {};
     }
 
-    std::cout << std::endl << "U need spend: " << resource_to_sell.name << " to buy next resources!\n";
-    std::cout << "Resource name:   " << "Resource count to buy:" << std::endl;
+    std::cout << '\n' << "U need spend: " << resource_to_sell.name << " to buy next resources!\n";
+    std::cout << "Resource name:   " << "Resource count to buy:" << '\n';
     int index_line = 1;
     for (const auto& pair : it->second)
     {
         result.emplace_back(index_line, pair.first);
         std::cout << index_line++ << ")" << std::setw(13) << pair.first.name << "   " << std::setw(23) << pair.second <<
-            std::endl;
+            '\n';
     }
     return result;
 }
 
-std::vector<std::pair<size_t, resource>> civilization_info::print_cost_information_to_buy(
+resource_index_table civilization_info::print_cost_information_to_buy(
     const resource& resource_to_buy)
 {
-    std::vector<std::pair<size_t, resource>> result;
+    resource_index_table result;
 
-    std::cout << std::endl << "=U wanna buy: " << resource_to_buy.name <<" It's resources, which u can sell:" "\n";
-    std::cout << "Resource name:     " << "Resource count to buy:" << std::endl;
+    std::cout << '\n' << "=U wanna buy: " << resource_to_buy.name << " It's resources, which u can sell:" "\n";
+    std::cout << "Resource name:     " << "Resource count to buy:" << '\n';
     size_t index_line = 1;
     for (const auto& cost : cost_map_)
     {
@@ -111,19 +112,19 @@ std::vector<std::pair<size_t, resource>> civilization_info::print_cost_informati
             const auto& cost_value = cost.second.find(resource_to_buy);
             result.emplace_back(index_line++, cost.first);
             std::cout << index_line - 1 << ")" << std::setw(13) << cost.first.name << "   " << std::setw(23) <<
-                std::to_string(round(cost_value->second)) + " by one " + resource_to_buy.name<< std::endl;
+                std::to_string(round(cost_value->second)) + " by one " + resource_to_buy.name << '\n';
         }
     }
 
     return result;
 }
 
-std::vector<std::pair<size_t, resource>> civilization_info::print_buy_information()
+resource_index_table civilization_info::print_buy_information()
 {
-    std::vector<std::pair<size_t, resource>> result;
+    resource_index_table result;
     std::set<std::string> unique_resources;
     size_t cost_index = 1;
-    std::cout << "--------------------------------" << std::endl;
+    std::cout << "--------------------------------" << '\n';
     std::cout << "=All Resource which u can buy:   \n";
     for (const auto& key : cost_map_ | std::views::values)
     {
@@ -138,7 +139,7 @@ std::vector<std::pair<size_t, resource>> civilization_info::print_buy_informatio
     }
     for (const auto& resource_element : result)
     {
-        std::cout << resource_element.first << ")" << std::setw(13) << resource_element.second.name << std::endl;
+        std::cout << resource_element.first << ")" << std::setw(13) << resource_element.second.name << '\n';
     }
     return result;
 }
@@ -156,25 +157,47 @@ float civilization_info::get_resource_count(const resource& resource_name)
 bool civilization_info::try_to_buy_resources(const resource& want_buy, const resource& want_sell,
                                              const unsigned int count)
 {
+    if (!resource_map_.contains(want_buy) || !resource_map_.contains(want_sell))
+    {
+        return false;
+    }
+
     const float count_selling_resource = get_resource_count(want_sell);
     const float cost_buy_resource = get_resource_cost(want_buy, want_sell);
+
     const float needed_resource = count / cost_buy_resource;
     if (needed_resource > count_selling_resource)
     {
         return false;
     }
-    if (want_sell.IsInt)
-    {
-        const auto resource_to_sell = resource_map_.find(want_sell);
-        const auto resource_to_buy = resource_map_.find(want_buy);
-        resource_to_buy->second += count;
-        resource_to_sell->second -= count / cost_buy_resource;
-        return true;
-    }
+
     const auto resource_to_sell = resource_map_.find(want_sell);
     const auto resource_to_buy = resource_map_.find(want_buy);
-    resource_to_buy->second += count;
-    resource_to_sell->second -= count / cost_buy_resource;
+
+    const std::variant<unsigned int, float>& resource_to_buy_ref = resource_to_buy->second;
+    const std::variant<unsigned int, float>& resource_to_sell_ref = resource_to_sell->second;
+    
+    bool is_int_variant = true;
+    if (!std::holds_alternative<unsigned int>(resource_to_buy->second) || !std::holds_alternative<unsigned int>(
+        resource_to_sell->second))
+    {
+        is_int_variant = false;
+    }
+    
+    if(is_int_variant)
+    {
+        unsigned int& resource_count_to_buy = std::get<unsigned int>(resource_to_buy->second);
+        unsigned int& resource_count_to_sell = std::get<unsigned int>(resource_to_sell->second);
+
+        resource_count_to_buy += count;
+        resource_count_to_sell -= static_cast<unsigned int>(count / cost_buy_resource);
+        return true;
+    }
+
+    float& resource_count_to_buy = std::get<float>(resource_to_buy->second);
+    float& resource_count_to_sell = std::get<float>(resource_to_sell->second);
+    resource_count_to_buy += count;
+    resource_count_to_sell -= count / cost_buy_resource;
     return true;
 }
 
@@ -190,9 +213,20 @@ float civilization_info::get_resource_cost(const resource& want_buy, const resou
     return FLT_MAX;
 }
 
+std::vector<resource> civilization_info::get_saleable_resources()
+{
+    std::vector<resource> result;
+    return result;
+}
+
 int civilization_info::get_humans_count() const
 {
-    return static_cast<int>(resource_map_.find(resource("humans"))->second);
+    if (const unsigned int* humans_count = std::get_if<unsigned int>(&resource_map_.find(resource("humans"))->second);
+        humans_count != nullptr)
+    {
+        return *humans_count;
+    }
+    return 0;
 }
 
 game_message game_info::try_load_game_or_create(const std::string& config_part)
@@ -208,7 +242,7 @@ game_message game_info::try_load_game_or_create(const std::string& config_part)
     const auto random_info_config = config.find("RandomInfo");
     std::map<std::string, float> base_cost_info_config = config.find("BaseCostInfo")->second;
 
-    std::map<std::string, std::unordered_map<std::string, float>> cost_config;
+    resource_cost_map cost_config;
     for (const auto [name,cost] : base_cost_info_config)
     {
         std::vector<std::string> names = game_config::split_str(name, "To");
@@ -218,7 +252,7 @@ game_message game_info::try_load_game_or_create(const std::string& config_part)
         }
         else
         {
-            std::unordered_map<std::string, float> buf;
+            std::unordered_map<resource, float> buf;
             buf.emplace(names[1], cost);
             cost_config.emplace(names[0], buf);
         }
@@ -235,10 +269,63 @@ game_message game_info::try_load_game_or_create(const std::string& config_part)
     default:
         break;
     }
-    max_rounds_ = game_info_config->second.find("maxRounds")->second;
+    max_rounds_ = static_cast<size_t>(game_info_config->second.find("maxRounds")->second);
     main_information = civilization_info(civil_info_config->second, cost_config);
 
     main_information.print_all_info();
 
     return SUCCESS_MESSAGE;
+}
+
+bool game_info::game_lose() const
+{
+    if (!main_information.get_humans_count())
+    {
+        return false;
+    }
+    return true;
+}
+
+void game_info::start_dialogue(bool is_new_game)
+{
+    std::cout << std::endl;
+    if (is_new_game)
+    {
+        std::cout <<
+            "=Hello!\nToday you will play as the ruler of Ancient Egypt!\nTry to lead your nation to greatness, and do not be discouraged by the difficulties along the way!\n\n";
+        std::cout <<
+            "=Remember that the poorer and malnourished your population is, the less food you produce.\nIf famine has begun, it is almost impossible to stop.\nAlso remember that the more abundant your resources are, the more demanding your citizens are! \nAnd don't forget about your enemies. They are always nearby, eager to seize your wealth!\nYou have fields for food, food reserves, gold, wars, and tax levels to collect money from your subjects. Remember that the mood of your subjects reflects on the success of your country.\nTry to maintain a balance in your government, as well as protect your country.\nGood reign to you!\n\n";
+    }
+    else
+    {
+        std::cout << "Today, u continue game! And win it!" << std::endl << std::endl;
+    }
+}
+
+bool game_info::read_config_and_init_game(const config_type& config)
+{
+    const auto game_info_config = config.find("GameInfo");
+    const auto civil_info_config = config.find("CivilInfo");
+    const auto random_info_config = config.find("RandomInfo");
+    std::map<std::string, float> base_cost_info_config = config.find("BaseCostInfo")->second;
+
+    resource_cost_map cost_config;
+    for (const auto& [name,cost] : base_cost_info_config)
+    {
+        std::vector<std::string> names = game_config::split_str(name, "To");
+        if (auto it = cost_config.find(names[0]); it != cost_config.end())
+        {
+            it->second.emplace(names[1], cost);
+        }
+        else
+        {
+            std::unordered_map<resource, float> buf;
+            buf.emplace(names[1], cost);
+            cost_config.emplace(names[0], buf);
+        }
+    }
+    max_rounds_ = game_info_config->second.find("maxRounds")->second;
+    main_information = civilization_info(civil_info_config->second, cost_config);
+    main_information.print_all_info();
+    return true;
 }

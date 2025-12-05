@@ -12,5 +12,6 @@ int main()
     {
         std::cout<<game_messages.message_text<<"\n";
     }
+    delete game;
     return 1;
 }

@@ -24,6 +24,7 @@ private:
 
 public:
     game_module();
+    ~game_module();
     game_message start_game();
 protected:
 
