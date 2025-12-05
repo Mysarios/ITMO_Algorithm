@@ -8,7 +8,7 @@ int main()
 {
     const auto game = new game_module;
 
-    if(game_message game_messages = game->start_game(); !game_messages.status || game_messages.status == end_game)
+    if(const game_message game_messages = game->start_game(); !game_messages.status || game_messages.status == end_game)
     {
         std::cout<<game_messages.message_text<<"\n";
     }

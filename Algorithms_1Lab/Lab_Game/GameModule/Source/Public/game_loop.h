@@ -34,7 +34,12 @@ private:
     game_info* info_;
     randomize_round_params after_round_random_params_;
 private:
+    void before_round_event();
+    bool round_event();
     void after_round_event();
+    
+    void first_message_after_game_start(bool new_game) const;
+    
     randomize_round_params get_random_params();
     
 public:

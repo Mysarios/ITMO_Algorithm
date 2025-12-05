@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <variant>
 
+#include "game_config.h"
 #include "game_message.h"
 #include "game_resourses.h"
 
@@ -39,6 +40,9 @@ class game_info
 private:
     size_t max_rounds_ = 0;
 
+    bool read_config_and_init_game(const config_type& config);
+    void start_dialogue(bool isNewGame);
+    
 public:
     civilization_info main_information;
 
