@@ -30,7 +30,6 @@ game_message game_module::start_dialogue()
 game_module::game_module(): game_loop_(nullptr), game_info_(nullptr)
 {
     game_info_ = new game_info();
-    //game_loop_ = new game_loop();
 }
 
 game_module::~game_module()

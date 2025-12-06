@@ -29,9 +29,9 @@ namespace
 
             std::cout << "Enter: index of resource-table to try sell it\nEnter: 0 to end buy\n\nPrint: ";
             std::cin >> input_key_to_sell;
-            if (!input_key)
+            if (!input_key_to_sell)
             {
-                continue;
+                break;
             }
             if (input_key_to_sell < 1 || input_key_to_sell > sell_array.size())
             {
@@ -76,11 +76,6 @@ namespace
     }
 }
 
-randomize_round_params game_loop::get_random_params()
-{
-    return randomize_round_params{}; // end
-}
-
 void game_loop::first_message_after_game_start(const bool new_game) const
 {
     if (!new_game)
@@ -100,7 +95,7 @@ void game_loop::before_round_event()
     std::cout << "--------------------------------" << '\n';
     std::cout << "=Round: " << round_ + 1 << '\n';
     std::cout << "--------------------------------" << '\n';
-    get_random_params();
+    randomize_costs();
 }
 
 bool game_loop::round_event() const
@@ -124,18 +119,37 @@ bool game_loop::round_event() const
     return true;
 }
 
+void game_loop::randomize_costs()
+{
+    info_->main_information.randomize_costs(info_->get_randomize_percent());
+}
+
 void game_loop::after_round_event()
 {
-    // Disasters
-    // Add humans
+    //first: food from fields
+    info_->main_information.add_resource_by_another(resource("fields"), resource("food"), 0.5,info_->main_information.get_resource_count(resource("humans")));
+    //second: gold from  humans
+    info_->main_information.add_resource_by_another(resource("humans"), resource("gold"),
+                                                    info_->main_information.get_resource_count(resource("taller")));
+    int died_people = info_->main_information.get_humans_count();
+    info_->main_information.spend_resource_by_another_with_loss(resource("food"), resource("humans"), 1);
+    died_people -= info_->main_information.get_humans_count();
+    
+    if(died_people >0)
+    {
+        std::cout << "Today : "<<died_people <<" humans were died by hungery " << '\n';
+    }
     ++round_;
 }
 
 
-game_loop::game_loop(game_info* new_game_info) : info_(new_game_info){};
+game_loop::game_loop(game_info* new_game_info) : info_(new_game_info)
+{
+};
 
 void game_loop::loop()
 {
+    srand(time(NULL));
     first_message_after_game_start(round_);
 
     const size_t max_rounds = info_->get_max_rounds_count();
@@ -156,7 +170,12 @@ void game_loop::loop()
             std::cout << "U lose =(" << '\n';
             return;
         }
+
+        const int added_people = rand() % static_cast<int>(info_->main_information.get_humans_count() * 0.1);
+        std::cout << "This year,"<<added_people <<" humans was joined to you civil" << '\n';
+        info_->main_information.add_humans(added_people);
+        std::cout << "Now U have: "<<info_->main_information.get_humans_count() <<" humans" << '\n';
     }
-    
+
     std::cout << "U Win!!!! =)" << '\n';
 }

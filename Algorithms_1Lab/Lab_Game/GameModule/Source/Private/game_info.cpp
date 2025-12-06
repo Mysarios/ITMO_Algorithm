@@ -4,11 +4,24 @@
 #include <iostream>
 #include <ranges>
 #include <set>
+#include <algorithm>
 
 #include "../Public/game_config.h"
 
+
 namespace
 {
+    float get_random_value_by_displacement(float base_value, float random_percent)
+    {
+        int displacement = random_percent * base_value;
+        if (displacement == 0)
+        {
+            displacement = 1;
+        }
+        const float result = base_value + (rand() % (displacement * 2)) - displacement;
+        return result;
+    }
+
     float get_value(std::variant<unsigned int, float> v)
     {
         return std::visit([]<typename T0>(T0&& arg) -> float
@@ -176,15 +189,15 @@ bool civilization_info::try_to_buy_resources(const resource& want_buy, const res
 
     const std::variant<unsigned int, float>& resource_to_buy_ref = resource_to_buy->second;
     const std::variant<unsigned int, float>& resource_to_sell_ref = resource_to_sell->second;
-    
+
     bool is_int_variant = true;
     if (!std::holds_alternative<unsigned int>(resource_to_buy->second) || !std::holds_alternative<unsigned int>(
         resource_to_sell->second))
     {
         is_int_variant = false;
     }
-    
-    if(is_int_variant)
+
+    if (is_int_variant)
     {
         unsigned int& resource_count_to_buy = std::get<unsigned int>(resource_to_buy->second);
         unsigned int& resource_count_to_sell = std::get<unsigned int>(resource_to_sell->second);
@@ -221,12 +234,159 @@ std::vector<resource> civilization_info::get_saleable_resources()
 
 int civilization_info::get_humans_count() const
 {
-    if (const unsigned int* humans_count = std::get_if<unsigned int>(&resource_map_.find(resource("humans"))->second);
-        humans_count != nullptr)
+    if (std::holds_alternative<unsigned int>(resource_map_.find(resource("humans"))->second))
     {
-        return *humans_count;
+        unsigned int humans_count = std::get<unsigned int>(resource_map_.find(resource("humans"))->second);
+        return humans_count;
     }
-    return 0;
+    else
+    {
+        float humans_count = std::get<float>(resource_map_.find(resource("humans"))->second);
+        return humans_count;
+    }
+}
+
+void civilization_info::add_humans(int count)
+{
+    if (std::holds_alternative<unsigned int>(resource_map_.find(resource("humans"))->second))
+    {
+        unsigned int& humans_count = std::get<unsigned int>(resource_map_.find(resource("humans"))->second);
+        humans_count += count;
+    }
+    else
+    {
+        float& humans_count = std::get<float>(resource_map_.find(resource("humans"))->second);
+        humans_count += count;
+    }
+}
+
+void civilization_info::randomize_costs(float percent)
+{
+    for (auto& [resource,cost_map] : cost_map_)
+    {
+        for (auto& [resource_with_price,price] : cost_map)
+        {
+            price = get_random_value_by_displacement(
+                base_cost_map_.find(resource)->second.find(resource_with_price)->second, percent);
+        }
+    }
+}
+
+bool civilization_info::add_resource_by_another(const resource& witch_deal, const resource& added_resource,
+                                                const float multiplier,float with_limit )
+{
+    float count_production = multiplier;
+    if (std::holds_alternative<unsigned int>(resource_map_.find(witch_deal)->second))
+    {
+        count_production *= std::get<unsigned int>(resource_map_.find(witch_deal)->second);
+    }
+    else
+    {
+        count_production *= std::get<float>(resource_map_.find(witch_deal)->second);
+    }
+    if(with_limit >0)
+    {
+        count_production= std::min(with_limit,count_production);
+    }
+    if (std::holds_alternative<unsigned int>(resource_map_.find(added_resource)->second))
+    {
+        unsigned int& map_value = std::get<unsigned int>(resource_map_.find(added_resource)->second);
+        map_value += count_production;
+    }
+    else
+    {
+        float& map_value = std::get<float>(resource_map_.find(added_resource)->second);
+        map_value += count_production;
+    }
+    return true;
+}
+
+bool civilization_info::spend_resource_by_another(const resource& spended_resource, const resource& resource,
+                                                  float multiplier, bool can_be_null)
+{
+    float count_spend = multiplier;
+    if (std::holds_alternative<unsigned int>(resource_map_.find(resource)->second))
+    {
+        count_spend *= std::get<unsigned int>(resource_map_.find(resource)->second);
+    }
+    else
+    {
+        count_spend *= std::get<float>(resource_map_.find(resource)->second);
+    }
+
+    if (std::holds_alternative<unsigned int>(resource_map_.find(spended_resource)->second))
+    {
+        unsigned int& map_value = std::get<unsigned int>(resource_map_.find(spended_resource)->second);
+        if (map_value < count_spend)
+        {
+            if (can_be_null)
+            {
+                map_value = 0;
+            }
+            else
+            {
+                map_value -= count_spend;
+            }
+        }
+    }
+    else
+    {
+        float& map_value = std::get<float>(resource_map_.find(spended_resource)->second);
+        if (map_value < count_spend)
+        {
+            if (can_be_null)
+            {
+                map_value = 0;
+            }
+            else
+            {
+                map_value -= count_spend;
+            }
+        }
+    }
+    return true;
+}
+
+bool civilization_info::spend_resource_by_another_with_loss(const resource& spended_resource, const resource& resource,
+    float multiplier)
+{
+    float count_spend = multiplier;
+    if (std::holds_alternative<unsigned int>(resource_map_.find(resource)->second))
+    {
+        count_spend *= std::get<unsigned int>(resource_map_.find(resource)->second);
+    }
+    else
+    {
+        count_spend *= std::get<float>(resource_map_.find(resource)->second);
+    }
+    float count_shortages = 0;
+    if (std::holds_alternative<unsigned int>(resource_map_.find(spended_resource)->second))
+    {
+        unsigned int& map_value = std::get<unsigned int>(resource_map_.find(spended_resource)->second);
+        count_shortages = count_spend - map_value;
+        map_value -= count_spend;
+    }
+    else
+    {
+        float& map_value = std::get<float>(resource_map_.find(spended_resource)->second);
+        count_shortages = count_spend - map_value;
+        map_value -= count_spend;
+    }
+    if(count_shortages <= 0)
+    {
+        return true;
+    }
+    if (std::holds_alternative<unsigned int>(resource_map_.find(resource)->second))
+    {
+        unsigned int& resource_count = std::get<unsigned int>(resource_map_.find(resource)->second);
+        resource_count -= count_shortages/multiplier;
+    }
+    else
+    {
+        float& resource_count = std::get<float>(resource_map_.find(resource)->second);
+        resource_count -= count_shortages/multiplier;
+    }
+    return true;
 }
 
 game_message game_info::try_load_game_or_create(const std::string& config_part)
@@ -237,41 +397,8 @@ game_message game_info::try_load_game_or_create(const std::string& config_part)
     {
         return load_message;
     }
-    const auto game_info_config = config.find("GameInfo");
-    const auto civil_info_config = config.find("CivilInfo");
-    const auto random_info_config = config.find("RandomInfo");
-    std::map<std::string, float> base_cost_info_config = config.find("BaseCostInfo")->second;
 
-    resource_cost_map cost_config;
-    for (const auto [name,cost] : base_cost_info_config)
-    {
-        std::vector<std::string> names = game_config::split_str(name, "To");
-        if (auto it = cost_config.find(names[0]); it != cost_config.end())
-        {
-            it->second.emplace(names[1], cost);
-        }
-        else
-        {
-            std::unordered_map<resource, float> buf;
-            buf.emplace(names[1], cost);
-            cost_config.emplace(names[0], buf);
-        }
-    }
-    std::cout << std::endl;
-    switch (config_part.length())
-    {
-    case 0:
-        std::cout <<
-            "=Hello!\nToday you will play as the ruler of Ancient Egypt!\nTry to lead your nation to greatness, and do not be discouraged by the difficulties along the way!\n\n";
-        std::cout <<
-            "=Remember that the poorer and malnourished your population is, the less food you produce.\nIf famine has begun, it is almost impossible to stop.\nAlso remember that the more abundant your resources are, the more demanding your citizens are! \nAnd don't forget about your enemies. They are always nearby, eager to seize your wealth!\nYou have fields for food, food reserves, gold, wars, and tax levels to collect money from your subjects. Remember that the mood of your subjects reflects on the success of your country.\nTry to maintain a balance in your government, as well as protect your country.\nGood reign to you!\n\n";
-        break;
-    default:
-        break;
-    }
-    max_rounds_ = static_cast<size_t>(game_info_config->second.find("maxRounds")->second);
-    main_information = civilization_info(civil_info_config->second, cost_config);
-
+    read_config_and_init_game(config); // load and cache local
     main_information.print_all_info();
 
     return SUCCESS_MESSAGE;
@@ -279,7 +406,7 @@ game_message game_info::try_load_game_or_create(const std::string& config_part)
 
 bool game_info::game_lose() const
 {
-    if (!main_information.get_humans_count())
+    if (main_information.get_humans_count() > 0)
     {
         return false;
     }
@@ -324,7 +451,17 @@ bool game_info::read_config_and_init_game(const config_type& config)
             cost_config.emplace(names[0], buf);
         }
     }
+    if (!game_info_config->second.contains("maxRounds"))
+    {
+        return false;
+    }
+    if (!random_info_config->second.contains("randomPercent"))
+    {
+        return false;
+    }
+
     max_rounds_ = game_info_config->second.find("maxRounds")->second;
+    random_percent_ = random_info_config->second.find("randomPercent")->second / 100.f;
     main_information = civilization_info(civil_info_config->second, cost_config);
     main_information.print_all_info();
     return true;
