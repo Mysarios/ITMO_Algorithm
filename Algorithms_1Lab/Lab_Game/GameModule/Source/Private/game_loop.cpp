@@ -78,7 +78,7 @@ namespace
 
 void game_loop::first_message_after_game_start(const bool new_game) const
 {
-    if (!new_game)
+    if (new_game)
     {
         std::cout << "=Game again started!\n U have " << info_->get_max_rounds_count() - round_ <<
             " to continue create best civilization, or die unknown!\n Good luck!\n" << '\n';
@@ -145,6 +145,7 @@ void game_loop::after_round_event()
 
 game_loop::game_loop(game_info* new_game_info) : info_(new_game_info)
 {
+    round_ = info_->current_round;
 };
 
 void game_loop::loop()

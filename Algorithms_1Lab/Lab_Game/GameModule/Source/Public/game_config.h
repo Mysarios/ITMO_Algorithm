@@ -9,6 +9,7 @@
 namespace config
 {
     static std::string base_config_part{ "GameModule/Config/BaseParametersConfig.txt"};
+    static std::string save_part{ "GameModule/Saves/"};
 }
 
 using config_type = std::map<std::string,std::map<std::string,float>>;

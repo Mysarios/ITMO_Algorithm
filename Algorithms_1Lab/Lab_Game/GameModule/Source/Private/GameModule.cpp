@@ -3,7 +3,7 @@
 
 game_message game_module::start_dialogue()
 {
-    std::cout << "Print 1 to try load game\nPrint 2 to create new game\nPrint 3 to close game\nPrint: ";
+    std::cout << "Print 1 to create new game\nPrint 2 to try load game\nPrint 3 to close game\nPrint: ";
     int input{0};
     std::cin >> input;
 
@@ -12,10 +12,10 @@ game_message game_module::start_dialogue()
     {
     case 1:
         // create new input by switch config
-        create_message = game_info_->try_load_game_or_create(/* tik*/); // load
+        create_message = game_info_->try_load_game_or_create(); // load
         break;
     case 2:
-        create_message = game_info_->try_load_game_or_create(); // create
+        create_message = game_info_->try_load_game_or_create(config::save_part); // create
         break;
     case 3:
         return {end_game, "\nGame closed", true}; //end

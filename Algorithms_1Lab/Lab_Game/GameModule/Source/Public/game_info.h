@@ -56,6 +56,7 @@ struct randomize_info
 class game_info
 {
 private:
+    
     size_t max_rounds_ = 0;
     float random_percent_ = 0.f;
 
@@ -64,7 +65,7 @@ private:
     
 public:
     civilization_info main_information;
-
+    size_t current_round = 0;
 public:
     game_info() = default;
     [[nodiscard]] size_t get_max_rounds_count() const { return max_rounds_; }

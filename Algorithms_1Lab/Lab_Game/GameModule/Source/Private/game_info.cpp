@@ -461,6 +461,7 @@ bool game_info::read_config_and_init_game(const config_type& config)
     }
 
     max_rounds_ = game_info_config->second.find("maxRounds")->second;
+    current_round = game_info_config->second.find("currentRound")->second;
     random_percent_ = random_info_config->second.find("randomPercent")->second / 100.f;
     main_information = civilization_info(civil_info_config->second, cost_config);
     main_information.print_all_info();
