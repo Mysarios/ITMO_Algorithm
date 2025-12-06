@@ -1,4 +1,4 @@
 BaseCostInfo=fieldsTogold:2.000000;foodTogold:5.000000;foodTohumans:50.000000;goldTofields:5.000000;goldTofood:0.500000;goldTowarriors:50.000000;humansTogold:10.000000
 CivilInfo=fields:200.000000;food:1000.000000;gold:50.000000;happines:100.000000;humans:2.000000;taller:0.500000;warriors:0.000000
 GameInfo=currentRound:7;maxRounds:10
-RandomInfo=randomPercent:0.006000
+RandomInfo=randomPercent:0.600000

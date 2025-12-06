@@ -61,6 +61,38 @@ civilization_info::civilization_info(const std::map<std::string, float>& resourc
 }
 
 
+std::map<std::string, std::string> civilization_info::get_info_to_save_resource_map()
+{
+    std::map<std::string, std::string> result;
+    for (const auto& [resource,value] : resource_map_)
+    {
+        if (std::holds_alternative<unsigned int>(value))
+        {
+            result.emplace(resource.name, std::to_string(std::get<unsigned int>(value)));
+        }
+        else
+        {
+            result.emplace(resource.name, std::to_string(std::get<float>(value)));
+        }
+    }
+
+    return result;
+}
+
+std::map<std::string, std::string> civilization_info::get_info_to_save_base_cost_map()
+{
+    std::map<std::string, std::string> result;
+    for (const auto& [resource_to_sell,cost_map] : base_cost_map_)
+    {
+        for (const auto& [resource,value] : cost_map)
+        {
+            result.emplace(resource_to_sell.name + "To" + resource.name, std::to_string(value));
+        }
+    }
+
+    return result;
+}
+
 void civilization_info::buy_resource(const resource& buy, const resource& sell, const unsigned int count)
 {
     std::cout << "\n=U wanna buy: " << count << " " << buy.name << " by: " << sell.name << "!    ";
@@ -273,7 +305,7 @@ void civilization_info::randomize_costs(float percent)
 }
 
 bool civilization_info::add_resource_by_another(const resource& witch_deal, const resource& added_resource,
-                                                const float multiplier,float with_limit )
+                                                const float multiplier, float with_limit)
 {
     float count_production = multiplier;
     if (std::holds_alternative<unsigned int>(resource_map_.find(witch_deal)->second))
@@ -284,9 +316,9 @@ bool civilization_info::add_resource_by_another(const resource& witch_deal, cons
     {
         count_production *= std::get<float>(resource_map_.find(witch_deal)->second);
     }
-    if(with_limit >0)
+    if (with_limit > 0)
     {
-        count_production= std::min(with_limit,count_production);
+        count_production = std::min(with_limit, count_production);
     }
     if (std::holds_alternative<unsigned int>(resource_map_.find(added_resource)->second))
     {
@@ -348,7 +380,7 @@ bool civilization_info::spend_resource_by_another(const resource& spended_resour
 }
 
 bool civilization_info::spend_resource_by_another_with_loss(const resource& spended_resource, const resource& resource,
-    float multiplier)
+                                                            float multiplier)
 {
     float count_spend = multiplier;
     if (std::holds_alternative<unsigned int>(resource_map_.find(resource)->second))
@@ -372,19 +404,19 @@ bool civilization_info::spend_resource_by_another_with_loss(const resource& spen
         count_shortages = count_spend - map_value;
         map_value -= count_spend;
     }
-    if(count_shortages <= 0)
+    if (count_shortages <= 0)
     {
         return true;
     }
     if (std::holds_alternative<unsigned int>(resource_map_.find(resource)->second))
     {
         unsigned int& resource_count = std::get<unsigned int>(resource_map_.find(resource)->second);
-        resource_count -= count_shortages/multiplier;
+        resource_count -= count_shortages / multiplier;
     }
     else
     {
         float& resource_count = std::get<float>(resource_map_.find(resource)->second);
-        resource_count -= count_shortages/multiplier;
+        resource_count -= count_shortages / multiplier;
     }
     return true;
 }

@@ -8,6 +8,7 @@
 
 namespace fs = std::filesystem;
 struct stat sb;
+using ConfigMap = std::map<std::string, std::map<std::string, std::string>>;
 
 namespace
 {
@@ -30,16 +31,15 @@ namespace
             config.emplace(config_name, config_map);
         }
     }
-
     void find_saves(std::string& part)
     {
         std::vector<std::string> saves;
         int counter_saves = 0;
         for (const auto& entry : fs::directory_iterator(part))
         {
-            if (entry.is_regular_file())  // Проверяем, что это файл (не директория)
+            if (entry.is_regular_file())
             {
-                std::string filename = entry.path().filename().string();  // Только имя файла с расширением
+                std::string filename = entry.path().filename().string();
                 std::cout << ++counter_saves << ") | " << filename << std::endl;
                 saves.push_back(filename);
             }
@@ -55,7 +55,7 @@ namespace
                 break;
             }
             input_key-=1;
-            if (input_key < saves.size() && input_key > 0)
+            if (input_key < saves.size() && input_key >= 0)
             {
                 part += saves[input_key];
                 return;
@@ -63,6 +63,28 @@ namespace
             std::cout << "Incorrect index, try again \n\n";
         }
         while (true);
+    }
+
+    bool writeConfigFile(const std::string& outputFile, const ConfigMap& config) {
+        std::ofstream file(outputFile);
+        if (!file.is_open()) {
+            std::cerr << "Can't open file " << outputFile << std::endl;
+            return false;
+        }
+        for (const auto& sectionPair : config) {
+            const std::string& section = sectionPair.first;
+            const auto& pairs = sectionPair.second;
+            file << section << "=";
+            bool first = true;
+            for (const auto& pair : pairs) {
+                if (!first) file << ";";
+                file << pair.first << ":" << pair.second;
+                first = false;
+            }
+            file << std::endl;
+        }
+        file.close();
+        return true;
     }
 }
 
@@ -102,3 +124,25 @@ std::vector<std::string> game_config::split_str(std::string s, const std::string
 
     return tokens;
 }
+
+
+game_message game_config::start_save(game_info* info)
+{
+    std::cout << "\nEnter save name" << '\n';
+    std::string file_name;
+    std::cin>>file_name;
+
+    ConfigMap config_to_save;
+    config_to_save.emplace(std::string("CivilInfo"),info->main_information.get_info_to_save_resource_map());
+    config_to_save.emplace(std::string("BaseCostInfo"),info->main_information.get_info_to_save_base_cost_map());
+
+    std::map<std::string, std::string> random_map = {{"randomPercent",std::to_string(info->get_randomize_percent()*100)}};
+    std::map<std::string, std::string> game_map = {{"maxRounds",std::to_string(info->get_max_rounds_count())},{"currentRound",std::to_string(info->current_round)}};
+    config_to_save.emplace(std::string("RandomInfo"),random_map);
+    config_to_save.emplace(std::string("GameInfo"),game_map);
+    
+
+    writeConfigFile(config::save_part + file_name + ".txt",config_to_save);
+    return SUCCESS_MESSAGE;
+}
+

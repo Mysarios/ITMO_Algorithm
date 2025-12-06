@@ -58,6 +58,7 @@ namespace
 
     bool input_dialogue(game_info* info, const int input_key)
     {
+        game_message MSG = SUCCESS_MESSAGE;
         switch (input_key)
         {
         case 1:
@@ -68,6 +69,12 @@ namespace
             return true;
         case 3:
             std::cout << "=End round!\n" << '\n'; // end
+            return false;
+        case 4:
+            std::cout << "\nStart Save!" << '\n'; // end
+            MSG = game_config::start_save(info);
+            std::cout<<MSG.message_text<<"\n";
+            std::exit(-1);
             return false;
         default:
             std::cout << "Enter correct input! ..." << '\n'; //retry
@@ -171,8 +178,8 @@ void game_loop::loop()
             std::cout << "U lose =(" << '\n';
             return;
         }
-
-        const int added_people = rand() % static_cast<int>(info_->main_information.get_humans_count() * 0.1);
+        const int maximum_added = std::max(static_cast<int>(info_->main_information.get_humans_count() * 0.1),1);
+        const int added_people = rand() % maximum_added;
         std::cout << "This year,"<<added_people <<" humans was joined to you civil" << '\n';
         info_->main_information.add_humans(added_people);
         std::cout << "Now U have: "<<info_->main_information.get_humans_count() <<" humans" << '\n';

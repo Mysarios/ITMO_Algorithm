@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <variant>
 
-#include "game_config.h"
 #include "game_message.h"
 #include "game_resourses.h"
 
@@ -12,6 +11,8 @@ using resource_cost = std::unordered_map<resource, float>;
 using resource_cost_map = std::unordered_map<resource, std::unordered_map<resource, float>>;
 using resource_map = std::unordered_map<resource, std::variant<unsigned int, float>>;
 using resource_index_table = std::vector<std::pair<size_t, resource>>;
+using config_type = std::map<std::string,std::map<std::string,float>>;
+
 struct civilization_info
 {
 private:
@@ -24,6 +25,8 @@ public:
                                const resource_cost_map& base_cost_config);
     civilization_info() = default;
 
+    std::map<std::string, std::string> get_info_to_save_resource_map();
+    std::map<std::string, std::string> get_info_to_save_base_cost_map();
     void buy_resource(const resource& buy, const resource& sell, unsigned int count);
     void print_all_info();
     
