@@ -27,21 +27,34 @@ public:
 
         ArrayType* it_value_ = nullptr;
         bool is_reverse_{false};
+        bool is_empty_{false};
 
     protected:
         TConstIterator() = delete;
 
-        TConstIterator(ArrayType* begin_ptr, ArrayType* end_ptr, const bool is_reverse = false) : begin_ptr_(begin_ptr),
-            end_ptr_(end_ptr), is_reverse_(is_reverse)
+        TConstIterator(ArrayType* begin_ptr, ArrayType* end_ptr, const bool is_empty, const bool is_reverse = false) :
+            begin_ptr_(begin_ptr),
+            end_ptr_(end_ptr), is_reverse_(is_reverse), is_empty_(is_empty)
         {
             is_reverse_ ? it_value_ = end_ptr_ : it_value_ = begin_ptr_;
         }
 
     public:
-        void next() { is_reverse_ ? --it_value_ : ++it_value_; }
+        void next()
+        {
+            if (is_empty_)
+            {
+                return;
+            }
+            is_reverse_ ? --it_value_ : ++it_value_;
+        }
 
         bool has_next()
         {
+            if (is_empty_)
+            {
+                return false;
+            }
             if (is_reverse_)
             {
                 return it_value_ >= begin_ptr_;
@@ -52,7 +65,10 @@ public:
             }
         }
 
-        const ArrayType& get() const { return *it_value_; }
+        const ArrayType& get() const
+        {
+            return *it_value_;
+        }
     };
 
     class TIterator final : public TConstIterator
@@ -60,8 +76,9 @@ public:
     protected:
         TIterator() = delete;
 
-        TIterator(ArrayType* begin_ptr, ArrayType* end_ptr, const bool is_reverse = false) : TConstIterator(
-            begin_ptr, end_ptr, is_reverse)
+        TIterator(ArrayType* begin_ptr, ArrayType* end_ptr, const bool is_empty, const bool is_reverse = false) :
+            TConstIterator(
+                begin_ptr, end_ptr, is_empty, is_reverse)
         {
         };
 
@@ -102,11 +119,31 @@ public:
     ArrayType& operator[](int index);
 
     int size() const;
+    int capacity() const;
+    bool is_empty() const
+    {
+        return size_ == 0;
+    }
 
-    TIterator iterator() { return TIterator(begin(), end_element_); }
-    TIterator reverse_iterator() { return TIterator(begin(), end_element_, true); }
-    TConstIterator iterator() const { return TConstIterator(begin(), end_element_); }
-    TConstIterator reverse_iterator() const { return TConstIterator(begin(), end_element_, true); }
+    TIterator iterator()
+    {
+        return TIterator(begin(), end_element_, is_empty());
+    }
+
+    TIterator reverse_iterator()
+    {
+        return TIterator(begin(), end_element_, is_empty(), true);
+    }
+
+    TConstIterator iterator() const
+    {
+        return TConstIterator(begin(), end_element_, is_empty());
+    }
+
+    TConstIterator reverse_iterator() const
+    {
+        return TConstIterator(begin(), end_element_, is_empty(), true);
+    }
 };
 
 template <class ArrayType>
@@ -267,4 +304,10 @@ template <class ArrayType>
 int TArray<ArrayType>::size() const
 {
     return size_;
+}
+
+template <class ArrayType>
+int TArray<ArrayType>::capacity() const
+{
+    return capacity_;
 }
