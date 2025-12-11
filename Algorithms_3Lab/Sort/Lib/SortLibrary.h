@@ -168,7 +168,7 @@ const std::chrono::microseconds sort(SortableType* begin, SortableType* end, Com
     const auto end_time = std::chrono::high_resolution_clock::now();
     const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start);
     
-    if (true)
+    if (print_time)
     {
         std::cout << "Sorting time: " << duration.count() << " microseconds" << std::endl;
     }

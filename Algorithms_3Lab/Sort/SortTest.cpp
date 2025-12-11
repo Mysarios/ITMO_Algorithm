@@ -21,45 +21,68 @@ void print_array(int arr[], int size)
     }
     std::cout << '\n';
 }
-constexpr int count = 50;
+
+constexpr int count_minimal = 3;
+constexpr int count = 120;
+constexpr int rand_limit = 3500;
+
+struct time_check
+{
+    std::chrono::microseconds base;
+    std::chrono::microseconds quick;
+    std::chrono::microseconds insert;
+};
 
 int main()
 {
-    
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    std::vector<time_check> result;
     int base_arr[count];
     for (int& i : base_arr)
     {
-        i = rand() % 50; 
+        i = rand() % rand_limit;
     }
-    
-    int arr_1[count];
-    int arr_2[count];
-    int arr_3[count];
 
-    int counter =0;
-    for (int& i : base_arr)
+    for (int check = count_minimal; check < count; ++check)
     {
-        arr_1[counter] = i;
-        arr_2[counter] = i;
-        arr_3[counter] = i;
-        ++counter;
+        time_check new_result;
+
+        const auto arr_1 = new int [check];
+        const auto arr_2 = new int [check];
+        const auto arr_3 = new int [check];
+
+        int counter = 0;
+        for (int i = 0; i < check; ++i)
+        {
+            arr_1[i] = base_arr[i];
+            arr_2[i] = base_arr[i];
+            arr_3[i] = base_arr[i];
+            ++counter;
+        }
+
+        const std::chrono::microseconds first_sort_time = sort(arr_1, arr_1 + check, asc_comparator,
+                                                               sort_namespace::base);
+        const std::chrono::microseconds second_sort_time = sort(arr_2, arr_2 + check, asc_comparator,
+                                                                sort_namespace::quick_sort);
+        std::chrono::microseconds third_sort_time = sort(arr_3, arr_3 + check, asc_comparator,
+                                                         sort_namespace::insert_sort);
+
+        delete[] arr_1;
+        delete[] arr_2;
+        delete[] arr_3;
+
+        new_result.base = first_sort_time;
+        new_result.quick = second_sort_time;
+        new_result.insert = third_sort_time;
+        result.push_back(new_result);
     }
 
-    std::cout << "First" << " ";
-    print_array(arr_1,std::size(arr_1));
-    std::chrono::microseconds first_sort_time = sort(std::begin(arr_1), std::end(arr_1)-1, asc_comparator, sort_namespace::base,true);
-    print_array(arr_1,std::size(arr_1));
-
-    std::cout << "Second" << " ";
-    print_array(arr_2,std::size(arr_2));
-    std::chrono::microseconds second_sort_time = sort(std::begin(arr_2), std::end(arr_2), asc_comparator, sort_namespace::quick_sort,true);
-    print_array(arr_2,std::size(arr_2));
-
-    std::cout << "Third" << " ";
-    print_array(arr_3,std::size(arr_3));
-    std::chrono::microseconds third_sort_time = sort(std::begin(arr_3), std::end(arr_3), asc_comparator, sort_namespace::quick_sort,true);
-    print_array(arr_3,std::size(arr_3));
-
+    int counter{0};
+    for (auto time : result)
+    {
+        std::cout << counter++ << " Element: " << time.base.count() << " and " << time.quick.count() << " and " << time.
+            insert.count() << '\n';
+    }
 
     return 0;
 }
