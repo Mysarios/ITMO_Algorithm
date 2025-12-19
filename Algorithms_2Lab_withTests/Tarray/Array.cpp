@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[])
 {
-    if(false)
+    if(true)
     {
         TArray<int> array(2);
         for (int i = 0; i < 16; ++i)

@@ -7,7 +7,6 @@ class TArray final
 {
 private:
     ArrayType* first_element_ = nullptr;
-    ArrayType* end_element_ = nullptr;
     ArrayType* dynamic_array_;
 
     long size_{0};
@@ -19,13 +18,16 @@ protected:
     bool expand_if_necessary();
 
 public:
+    
+#pragma region Iterator
+    
     class TConstIterator
     {
     protected:
-        ArrayType* begin_ptr_ = nullptr;
-        ArrayType* end_ptr_ = nullptr;
+        ArrayType* begin_ptr_{nullptr};
+        ArrayType* end_ptr_{nullptr};
 
-        ArrayType* it_value_ = nullptr;
+        ArrayType* it_value_{nullptr};
         bool is_reverse_{false};
         bool is_empty_{false};
 
@@ -55,14 +57,7 @@ public:
             {
                 return false;
             }
-            if (is_reverse_)
-            {
-                return it_value_ >= begin_ptr_;
-            }
-            else
-            {
-                return it_value_ <= end_ptr_;
-            }
+            return is_reverse_ ? it_value_ >= begin_ptr_ : it_value_ <= end_ptr_;
         }
 
         const ArrayType& get() const
@@ -78,41 +73,29 @@ public:
 
         TIterator(ArrayType* begin_ptr, ArrayType* end_ptr, const bool is_empty, const bool is_reverse = false) :
             TConstIterator(
-                begin_ptr, end_ptr, is_empty, is_reverse)
-        {
-        };
+                begin_ptr, end_ptr, is_empty, is_reverse) {}
 
     public:
         void set(const ArrayType& value) { *(this->it_value_) = value; }
 
         friend TArray;
     };
-
-    TArray() : TArray(8)
-    {
-    }
-
+    
+#pragma endregion
+    
+    TArray() : TArray(8){}
     explicit TArray(const long capacity);
     ~TArray();
 
     TArray(const TArray& other);
     TArray(TArray&& other) noexcept;
     TArray& operator=(const TArray& other);
-    TArray& operator=(TArray&& other) noexcept;
 
-    ArrayType* begin()
-    {
-        return first_element_;
-    }
-
-    ArrayType* end()
-    {
-        return end_element_ + 1;
-    }
+    ArrayType* begin() {return first_element_; }
+    ArrayType* end() {return dynamic_array_ + size_;; }
 
     int insert(const ArrayType& value);
     int insert(int index, const ArrayType& value);
-
     void remove(int index);
 
     const ArrayType& operator[](int index) const;
@@ -120,47 +103,76 @@ public:
 
     int size() const;
     int capacity() const;
-    bool is_empty() const
+    bool is_empty() const {return size_ == 0; }
+    
+    void swap(TArray& other) noexcept
     {
-        return size_ == 0;
+        std::swap(dynamic_array_, other.dynamic_array_);
+        std::swap(size_, other.size_);
+        std::swap(capacity_, other.capacity_);
+        std::swap(first_element_, other.first_element_);
     }
-
+    
     TIterator iterator()
     {
-        return TIterator(begin(), end_element_, is_empty());
+        return TIterator(begin(), end()-1, is_empty());
     }
 
     TIterator reverse_iterator()
     {
-        return TIterator(begin(), end_element_, is_empty(), true);
+        return TIterator(begin(), end()-1, is_empty(), true);
     }
 
     TConstIterator iterator() const
     {
-        return TConstIterator(begin(), end_element_, is_empty());
+        return TConstIterator(begin(), end()-1, is_empty());
     }
 
     TConstIterator reverse_iterator() const
     {
-        return TConstIterator(begin(), end_element_, is_empty(), true);
+        return TConstIterator(begin(), end()-1, is_empty(), true);
     }
 };
 
 template <class ArrayType>
-bool TArray<ArrayType>::resize()
+TArray<ArrayType>::TArray(const long capacity) : capacity_(capacity)
 {
-    capacity_ *= base_capacity_multiplier;
-    ArrayType* new_array = new ArrayType[capacity_];
-    for (size_t i = 0; i < size_; ++i)
-    {
-        new_array[i] = std::move(dynamic_array_[i]);
-    }
-    delete[] dynamic_array_;
-    dynamic_array_ = new_array;
-
+    dynamic_array_ = new ArrayType[capacity_];
     first_element_ = dynamic_array_;
-    end_element_ = &dynamic_array_[size_ - 1];
-    return true;
+}
+
+template <class ArrayType>
+TArray<ArrayType>::~TArray()
+{
+    delete[] dynamic_array_;
+    first_element_ = nullptr;
+}
+
+template <class ArrayType>
+TArray<ArrayType>::TArray(const TArray& other) : TArray(other.capacity_)
+{
+    for(long i = 0; i < other.size_; ++i)
+    {
+        dynamic_array_[i] = other.dynamic_array_[i];
+    }
+    size_ = other.size_;
+    first_element_ = dynamic_array_;
+}
+
+template <class ArrayType>
+TArray<ArrayType>::TArray(TArray&& other) noexcept
+    : first_element_(nullptr), dynamic_array_(nullptr),
+      size_(0), capacity_(0)
+{
+    swap(other);
+}
+
+template <class ArrayType>
+TArray<ArrayType>& TArray<ArrayType>::operator=(const TArray& other)
+{
+    TArray copy_array(other);
+    swap(copy_array);
+    return *this;
 }
 
 template <class ArrayType>
@@ -175,78 +187,19 @@ bool TArray<ArrayType>::expand_if_necessary()
 }
 
 template <class ArrayType>
-TArray<ArrayType>::TArray(const long capacity) : capacity_(capacity)
+bool TArray<ArrayType>::resize()
 {
-    dynamic_array_ = new ArrayType[capacity_];
-    first_element_ = dynamic_array_;
-    end_element_ = dynamic_array_;
-}
-
-template <class ArrayType>
-TArray<ArrayType>::~TArray()
-{
-    delete[] dynamic_array_;
-    first_element_ = nullptr;
-    end_element_ = nullptr;
-}
-
-template <class ArrayType>
-TArray<ArrayType>::TArray(const TArray& other) : size_(other.size_), capacity_(other.capacity_)
-{
-    dynamic_array_ = new ArrayType[capacity_];
+    capacity_ *= base_capacity_multiplier;
+    ArrayType* new_array = new ArrayType[capacity_];
     for (size_t i = 0; i < size_; ++i)
     {
-        dynamic_array_[i] = other.dynamic_array_[i];
+        new_array[i] = std::move(dynamic_array_[i]);
     }
-}
+    delete[] dynamic_array_;
+    dynamic_array_ = new_array;
 
-template <class ArrayType>
-TArray<ArrayType>::TArray(TArray&& other) noexcept : dynamic_array_(other.dynamic_array_), size_(other.size_),
-                                                     capacity_(other.capacity_)
-{
-    other.dynamic_array_ = nullptr;
-    other.size_ = 0;
-    other.capacity_ = 0;
-}
-
-template <class ArrayType>
-TArray<ArrayType>& TArray<ArrayType>::operator=(const TArray& other)
-{
-    if (this != &other)
-    {
-        delete[] dynamic_array_;
-        size_ = other.size_;
-        capacity_ = other.capacity_;
-        dynamic_array_ = new ArrayType[capacity_];
-        for (size_t i = 0; i < size_; ++i)
-        {
-            dynamic_array_[i] = other.dynamic_array_[i];
-        }
-        first_element_ = other.begin();
-        end_element_ = other.end();
-    }
-    return *this;
-}
-
-template <class ArrayType>
-TArray<ArrayType>& TArray<ArrayType>::operator=(TArray&& other) noexcept
-{
-    if (this != &other)
-    {
-        delete[] dynamic_array_;
-        dynamic_array_ = other.dynamic_array_;
-        size_ = other.size_;
-        capacity_ = other.capacity_;
-        first_element_ = other.begin();
-        end_element_ = other.end();
-
-        other.dynamic_array_ = nullptr;
-        other.first_element_ = nullptr;
-        other.end_element_ = nullptr;
-        other.size_ = 0;
-        other.capacity_ = 0;
-    }
-    return *this;
+    first_element_ = dynamic_array_;
+    return true;
 }
 
 template <class ArrayType>
@@ -254,7 +207,6 @@ int TArray<ArrayType>::insert(const ArrayType& value)
 {
     expand_if_necessary();
     dynamic_array_[size_++] = value;
-    end_element_ = &dynamic_array_[size_ - 1];
     return size_;
 }
 
@@ -273,19 +225,21 @@ int TArray<ArrayType>::insert(const int index, const ArrayType& value)
     }
     dynamic_array_[index] = value;
     ++size_;
-    end_element_ = &dynamic_array_[size_ - 1];
     return size_;
 }
 
 template <class ArrayType>
 void TArray<ArrayType>::remove(const int index)
 {
+    if(size_ == 0)
+    {
+        return;
+    }
     for (size_t i = index; i < size_ - 1; ++i)
     {
         dynamic_array_[i] = std::move(dynamic_array_[i + 1]);
     }
     --size_;
-    end_element_ = &dynamic_array_[size_ - 1];
 }
 
 template <class ArrayType>

@@ -1,8 +1,12 @@
 #include <algorithm>
 #include <iostream>
+#include <gtest/gtest.h>
 
 #include "Lib/SortLibrary.h"
 #include "vector"
+
+#define WITH_TEST  1
+#define WITH_NONE_TEST  0
 
 auto asc_comparator = [](const int& a, const int& b) -> bool
 {
@@ -33,8 +37,15 @@ struct time_check
     std::chrono::microseconds insert;
 };
 
-int main()
+
+int main(int argc, char **argv)
 {
+    if(WITH_TEST)
+    {
+        ::testing::InitGoogleTest(&argc, argv);
+        RUN_ALL_TESTS();  
+    }
+    
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     std::vector<time_check> result;
     int base_arr[count];
