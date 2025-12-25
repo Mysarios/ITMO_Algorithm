@@ -84,9 +84,7 @@ public:
 
 #pragma endregion
 
-    TArray() : TArray(8)
-    {
-    }
+    TArray() : TArray(8){}
 
     explicit TArray(const long capacity);
     ~TArray();
@@ -140,7 +138,7 @@ public:
 template <class ArrayType>
 TArray<ArrayType>::TArray(const long capacity) : capacity_(capacity)
 {
-    dynamic_array_ = static_cast<ArrayType*>(malloc(sizeof(ArrayType) * capacity_));
+    dynamic_array_ = static_cast<ArrayType*>(std::malloc(sizeof(ArrayType) * capacity_));
     if (!dynamic_array_) throw std::bad_alloc();
 }
 
@@ -149,7 +147,7 @@ TArray<ArrayType>::~TArray()
 {
     if (dynamic_array_ && capacity_)
     {
-        for (int i = 0; i < capacity_; ++i)
+        for (int i = 0; i < size_; ++i)
         {
             dynamic_array_[i].~ArrayType();
         }
@@ -197,7 +195,7 @@ template <class ArrayType>
 void TArray<ArrayType>::resize()
 {
     capacity_ *= base_capacity_multiplier;
-    ArrayType* new_array = static_cast<ArrayType*>(malloc(sizeof(ArrayType) * capacity_));
+    ArrayType* new_array = static_cast<ArrayType*>(std::malloc(sizeof(ArrayType) * capacity_));
     if (!new_array)
     {
         throw std::bad_alloc();
