@@ -15,71 +15,53 @@ namespace sort_namespace
 
 namespace
 {
-    template <class SortableType, typename Compare>
-    int median(SortableType* arr, int idx_a, int idx_b, int idx_c, Compare comp)
+    /*template <class SortableType, typename Compare>
+    int median(SortableType* arr, int a, int b, int c, Compare comp)
     {
-        const SortableType& a = arr[idx_a];
-        const SortableType& b = arr[idx_b];
-        const SortableType& c = arr[idx_c];
-
-        if (comp(a, b))
+        if (comp(arr[b], arr[a]))
         {
-            if (comp(b, c)) return idx_b;
-            if (comp(a, c)) return idx_c;
-            return idx_a;
+            if (comp(arr[c], arr[a]))
+            {
+                return comp(arr[c], arr[b]) ? b : c;
+            }
+            return a;
         }
-        else
+        if (comp(arr[c], arr[b]))
         {
-            if (comp(a, c)) return idx_a;
-            if (comp(b, c)) return idx_c;
-            return idx_b;
+            return comp(arr[c], arr[a]) ? a : c;
         }
-    }
-
+        return b;
+    }*/  //Вынес внутрь партишиона
     template <class SortableType, typename Compare>
     int partition_hoare(SortableType* arr, int l, int r, Compare comp)
     {
-        SortableType pivot = arr[(l + r) / 2];
+        //Поиск медианы встроена для исключения вызова
+        int m = l + (r - l) / 2;
+    
+        if (comp(arr[m], arr[l])) std::swap(arr[l], arr[m]);
+        if (comp(arr[r], arr[l])) std::swap(arr[l], arr[r]);
+        if (comp(arr[r], arr[m])) std::swap(arr[m], arr[r]);
+    
+        const SortableType& pivot = arr[m];
+        std::swap(arr[m], arr[(l + r) / 2]); // медиана в серидину
+
         int i = l - 1;
         int j = r + 1;
-
         while (true)
         {
-            do
-            {
-                ++i;
-            }
+            do { i++; }
             while (comp(arr[i], pivot));
-
-            do
-            {
-                --j;
-            }
+            do { j--; }
             while (comp(pivot, arr[j]));
 
-            if (i >= j)
-                return j;
-
+            if (i >= j) return j;
             std::swap(arr[i], arr[j]);
         }
     }
-
-    template <class SortableType, typename Compare>
-    void quicksort_itmo_impl(SortableType* arr, int l, int r, Compare comp)
-    {
-        if (l >= r) return;
-        
-        int median_idx = median(arr, l, (l + r) / 2, r, comp);
-        std::swap(arr[median_idx], arr[(l + r) / 2]);
-
-        int i = partition_hoare(arr, l, r, comp);
-        //рекурсимся
-        quicksort_itmo_impl(arr, l, i, comp);
-        quicksort_itmo_impl(arr, i + 1, r, comp);
-    }
-
+    
     template <class SortableType, typename Compare>
     void insertion_sort(SortableType* begin, SortableType* end, Compare comp)
+    //Требование 2 - Инсерт со сдвигом
     {
         if (begin >= end) return;
         for (SortableType* i = begin + 1; i < end; ++i)
@@ -94,6 +76,34 @@ namespace
             *j = std::move(key);
         }
     }
+    
+    constexpr int INSERTION_THRESHOLD = 32;
+    template <class SortableType, typename Compare>
+    void quicksort_itmo_impl(SortableType* arr, int l, int r, Compare comp, int treshold = INSERTION_THRESHOLD)
+    {
+        
+        while (r - l > treshold) // Требование 1 - рекурсивно меньшую часть, оставшуюся иттеративно
+        {
+            int i = partition_hoare(arr, l, r, comp); // Требование 3 - партишн Хоара 
+
+            if (i - l < r - i)
+            {
+                quicksort_itmo_impl(arr, l, i, comp,treshold);
+                l = i + 1;
+            }
+            else
+            {
+                quicksort_itmo_impl(arr, i + 1, r, comp,treshold);
+                r = i;
+            }
+        }
+        if (l < r)
+        {
+            insertion_sort(arr + l, arr + r + 1, comp);
+        }
+    }
+
+    
 
     template <class SortableType, typename Compare>
     void base_sort(SortableType* begin, SortableType* end, Compare comparator)
@@ -118,25 +128,20 @@ namespace
 }
 
 template <class SortableType, typename Compare>
-    const std::chrono::microseconds quicksort(SortableType* begin, SortableType* end, Compare comp)
+void quicksort(SortableType* begin, SortableType* end, Compare comp)
 {
-    if (begin >= end) return std::chrono::microseconds::zero();
+    if (begin >= end) return;
 
-    //prepare
     int l = 0;
     int r = static_cast<int>(end - begin) - 1;
-    auto start = std::chrono::high_resolution_clock::now();
     quicksort_itmo_impl(begin, l, r, comp);
-    const auto end_time = std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(end_time - start);
 }
 
 template <class SortableType, typename Compare>
-const std::chrono::microseconds sort(SortableType* begin, SortableType* end, Compare comparator,
-                                     const sort_namespace::sort_types sort_type = sort_namespace::base,
-                                     bool print_time = false)
+void sort(SortableType* begin, SortableType* end, Compare comparator,
+          const sort_namespace::sort_types sort_type = sort_namespace::base,
+          const bool print_time = false)
 {
-    auto start = std::chrono::high_resolution_clock::now();
     switch (sort_type)
     {
     case sort_namespace::none:
@@ -154,31 +159,58 @@ const std::chrono::microseconds sort(SortableType* begin, SortableType* end, Com
         base_sort(begin, end, comparator);
         break;
     }
-    const auto end_time = std::chrono::high_resolution_clock::now();
-    const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start);
-
-    if (print_time)
-    {
-        std::cout << "Sorting time: " << duration.count() << " microseconds" << std::endl;
-    }
-    return duration;
 }
 
-constexpr int change_size = 90;
+constexpr int change_size = 20;
 
 template <class SortableType, typename Compare>
-const std::chrono::microseconds fast_sort(SortableType* begin, SortableType* end, Compare comparator)
+const std::chrono::nanoseconds fast_sort(SortableType* begin, SortableType* end, Compare comparator, int treshold = change_size )
 {
-    auto start = std::chrono::high_resolution_clock::now();
-    if (end - begin <= change_size)
+    if (begin >= end) return std::chrono::nanoseconds::zero();
+    int l = 0;
+    int r = static_cast<int>(end - begin) - 1;
+
+    
+    if(end - begin <= treshold)
     {
+        auto end_time = std::chrono::steady_clock::now();
+        const auto start = std::chrono::steady_clock::now();
         insertion_sort(begin, end, comparator);
-    }
-    else
+        end_time = std::chrono::steady_clock::now();
+        
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start);
+    }else
     {
-        quicksort(begin, end, comparator);
+        auto end_time = std::chrono::steady_clock::now();
+        const auto start = std::chrono::steady_clock::now();
+        quicksort_itmo_impl(begin, l, r, comparator,treshold);
+        end_time = std::chrono::steady_clock::now();
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start);
     }
-    const auto end_time = std::chrono::high_resolution_clock::now();
-    const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start);
-    return duration;
+    
+}
+
+template <class SortableType, typename Compare>
+const std::chrono::nanoseconds only_quick_sort(SortableType* begin, SortableType* end, Compare comparator)
+{
+    auto end_time = std::chrono::steady_clock::now();
+    if (begin >= end) return std::chrono::nanoseconds::zero();
+    int l = 0;
+    int r = static_cast<int>(end - begin) - 1;
+    const auto start = std::chrono::steady_clock::now();
+    quicksort_itmo_impl(begin, l, r, comparator);
+    end_time = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start) ;
+}
+
+template <class SortableType, typename Compare>
+const std::chrono::nanoseconds  only_insert_sort(SortableType* begin, SortableType* end, Compare comparator)
+{
+    auto end_time = std::chrono::steady_clock::now();
+    if (begin >= end) return std::chrono::nanoseconds::zero();
+    
+    const auto start = std::chrono::steady_clock::now();
+    insertion_sort(begin, end, comparator);
+    end_time = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start);
 }
